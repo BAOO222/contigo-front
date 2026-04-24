@@ -150,7 +150,10 @@ function logoutAndGoToLogin() {
     localStorage.removeItem('contigo_user');
     localStorage.removeItem('contigo_state_v1');
   } catch {}
-  window.location.href = 'Contigo.html#/login';
+  // Local (arquivo aberto direto ou localhost) usa Contigo.html.
+  // Em produção (Vercel) o arquivo foi renomeado pra index.html, então vai pra raiz.
+  const isLocalFile = (typeof window !== 'undefined' && (window.location.protocol === 'file:' || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname)));
+  window.location.href = (isLocalFile ? 'Contigo.html' : '/') + '#/login';
 }
 
 
@@ -377,7 +380,13 @@ function StateProvider({ children }) {
       return mutator(prev);
     });
     apiCall().catch(err => {
-      console.error('[contigo] falha ao sincronizar com o servidor', err);
+      // Log detalhado pra diagnóstico
+      console.error('[contigo] falha ao sincronizar com o servidor', {
+        message: err && err.message,
+        error: err && err.error,
+        status: err && err.status,
+        details: err && err.details,
+      });
       if (err && err.status === 401) { logoutAndGoToLogin(); return; }
       if (rollback) setState(rollback);
     });
