@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Contigo — Seu espaço</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          cream: '#FAF8F5',
+          ink: '#2A2A2A',
+          sage: {DEFAULT:'#7A9B8A',50:'#F1F5F2',100:'#E3EBE6',200:'#C8D7CE',300:'#A7BEB1',400:'#8EA99A',500:'#7A9B8A',600:'#5F7D6D',700:'#4C6357',800:'#3E5047',900:'#34433B'},
+          terra: {DEFAULT:'#C77D5F',50:'#FAF1EC',100:'#F4E0D5',200:'#E9C1AC',300:'#DBA283',400:'#D18F6F',500:'#C77D5F',600:'#A85E43',700:'#854A35'},
+          sand: {DEFAULT:'#E6D9B8',50:'#FBF7ED',100:'#F5EDD6',200:'#EBDDB0',300:'#E0CB89'},
+          stone2: '#E8E4DE',
+        },
+        fontFamily: {
+          serif: ['Fraunces', 'ui-serif', 'Georgia', 'serif'],
+          sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        },
+        boxShadow: {
+          soft: '0 1px 2px rgba(42,42,42,0.04), 0 4px 24px rgba(42,42,42,0.04)',
+          softer: '0 1px 2px rgba(42,42,42,0.03)',
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  html, body { background:#FAF8F5; color:#2A2A2A; font-family:'Inter',ui-sans-serif,system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+  .font-display { font-family:'Fraunces',ui-serif,Georgia,serif; font-optical-sizing:auto; font-variation-settings:"SOFT" 50, "WONK" 0; letter-spacing:-0.02em; }
+  .route-fade { animation: fade .35s ease-out; }
+  @keyframes fade { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+  .step-in { animation: stepin .45s cubic-bezier(.2,.7,.2,1); }
+  @keyframes stepin { from { opacity:0; transform:translateY(10px);} to { opacity:1; transform:none;} }
+  input:focus, button:focus, textarea:focus { outline: none; }
+  .ring-focus:focus { box-shadow: 0 0 0 3px rgba(122,155,138,0.25); border-color: #7A9B8A; }
+  ::-webkit-scrollbar { width:10px; height:10px; }
+  ::-webkit-scrollbar-thumb { background:#E8E4DE; border-radius:10px; }
+  ::-webkit-scrollbar-thumb:hover { background:#d8d2c8; }
+  /* checkmark draw */
+  .check-path { stroke-dasharray: 40; stroke-dashoffset: 40; animation: draw 700ms .15s forwards ease-out; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  /* pulse */
+  @keyframes softpulse { 0%,100% { opacity:.9; transform:scale(1);} 50% { opacity:1; transform:scale(1.06);} }
+  .soft-pulse { animation: softpulse 2.6s ease-in-out infinite; }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+/* =====================================================================
+   CONTIGO APP — full single-file build
+   ===================================================================== */
+
+/* ------------- Hash router ------------- */
+const useHashRoute = () => {
+  const [hash, setHash] = React.useState(() => window.location.hash.replace(/^#/, '') || '/app');
+  React.useEffect(() => {
+    const onHash = () => {
+      setHash(window.location.hash.replace(/^#/, '') || '/app');
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+  const navigate = (to) => { window.location.hash = to.replace(/^#/, ''); };
+  return [hash, navigate];
+};
+const Link = ({ to, className='', children, ...rest }) => (
+  <a href={`#${to}`} className={className} {...rest}>{children}</a>
+);
+
+/* ------------- Icons (inline, line-style) ------------- */
+const Ic = ({ d, size=18, stroke=1.6, className='' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">{d}</svg>
+);
+const IcHome = (p)=> <Ic {...p} d={<><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></>} />;
+const IcCheck = (p)=> <Ic {...p} d={<path d="M20 6L9 17l-5-5"/>} />;
+const IcPlus = (p)=> <Ic {...p} d={<><path d="M12 5v14M5 12h14"/></>} />;
+const IcList = (p)=> <Ic {...p} d={<><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></>} />;
+const IcChart = (p)=> <Ic {...p} d={<><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-7"/></>} />;
+const IcCog = (p)=> <Ic {...p} d={<><circle cx="12" cy="12" r="3"/><path d="M19 12c0 .6-.1 1.2-.2 1.8l2 1.5-2 3.4-2.3-1a7 7 0 0 1-3.1 1.8l-.4 2.5h-4l-.4-2.5a7 7 0 0 1-3.1-1.8l-2.3 1-2-3.4 2-1.5c-.1-.6-.2-1.2-.2-1.8s.1-1.2.2-1.8l-2-1.5 2-3.4 2.3 1a7 7 0 0 1 3.1-1.8L10 2h4l.4 2.5a7 7 0 0 1 3.1 1.8l2.3-1 2 3.4-2 1.5c.1.6.2 1.2.2 1.8z"/></>} />;
+const IcArr = (p)=> <Ic {...p} d={<><path d="M5 12h14M13 5l7 7-7 7"/></>} />;
+const IcArrL = (p)=> <Ic {...p} d={<><path d="M19 12H5M11 5l-7 7 7 7"/></>} />;
+const IcMenu = (p)=> <Ic {...p} d={<><path d="M3 6h18M3 12h18M3 18h18"/></>} />;
+const IcX = (p)=> <Ic {...p} d={<><path d="M6 6l12 12M18 6L6 18"/></>} />;
+const IcDown = (p)=> <Ic {...p} d={<><path d="M12 3v14M5 10l7 7 7-7"/></>} />;
+const IcOut = (p)=> <Ic {...p} d={<><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5M15 12H3"/></>} />;
+const IcEdit = (p)=> <Ic {...p} d={<><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></>} />;
+const IcTrash = (p)=> <Ic {...p} d={<><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></>} />;
+const IcHeart = (p)=> <Ic {...p} d={<path d="M20.8 5.6a5.5 5.5 0 0 0-7.8 0L12 6.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 22l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"/>} />;
+const IcSearch = (p)=> <Ic {...p} d={<><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></>} />;
+const IcDownload = (p)=> <Ic {...p} d={<><path d="M12 3v13M7 12l5 5 5-5"/><path d="M3 21h18"/></>} />;
+const IcPhone = (p)=> <Ic {...p} d={<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.7.5 2.5a2 2 0 0 1-.5 2.1L7.9 9.6a16 16 0 0 0 6 6l1.3-1.1a2 2 0 0 1 2.1-.5c.8.3 1.6.4 2.5.5a2 2 0 0 1 1.7 2z"/>} />;
+
+/* ======================================================================
+   Contigo API — helper compartilhado com a landing
+   ====================================================================== */
+const CONTIGO_API_BASE = (() => {
+  if (typeof window !== 'undefined' && window.CONTIGO_API_BASE) return window.CONTIGO_API_BASE;
+  if (typeof window !== 'undefined' && /^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname)) {
+    return 'http://localhost:3333';
+  }
+  return 'https://contigo-api-production.up.railway.app';
+})();
+
+class AppApiError extends Error {
+  constructor(payload, status) {
+    super((payload && payload.message) || 'Erro inesperado.');
+    this.error = (payload && payload.error) || 'UNKNOWN';
+    this.details = payload && payload.details;
+    this.status = status;
+  }
+}
+
+async function contigoApi(path, opts = {}) {
+  const token = (() => { try { return localStorage.getItem('contigo_token'); } catch { return null; } })();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(opts.headers || {}),
+  };
+  const res = await fetch(`${CONTIGO_API_BASE}${path}`, { ...opts, headers });
+  if (res.status === 204) return null;
+  const ct = res.headers.get('content-type') || '';
+  const body = ct.includes('application/json') ? await res.json() : await res.text();
+  if (!res.ok) throw new AppApiError(body, res.status);
+  return body;
+}
+
+function logoutAndGoToLogin() {
+  try {
+    localStorage.removeItem('contigo_token');
+    localStorage.removeItem('contigo_user');
+    localStorage.removeItem('contigo_state_v1');
+  } catch {}
+  window.location.href = 'Contigo.html#/login';
+}
+
+
+/* ------------- Logo ------------- */
+const Logo = ({ size=20, onlyMark=false }) => (
+  <span className="inline-flex items-center gap-2" style={{fontSize:size}}>
+    <span style={{width:size*0.95, height:size*0.95}} className="inline-block">
+      <svg viewBox="0 0 32 32" className="w-full h-full">
+        <circle cx="16" cy="16" r="15" fill="#F1F5F2" stroke="#C8D7CE" strokeWidth="0.8"/>
+        <path d="M11 9a8 8 0 1 0 0 14" stroke="#7A9B8A" strokeWidth="1.6" fill="none" strokeLinecap="round"/>
+        <path d="M21 9a8 8 0 1 1 0 14" stroke="#C77D5F" strokeWidth="1.6" fill="none" strokeLinecap="round"/>
+      </svg>
+    </span>
+    {!onlyMark && <span className="font-display text-ink" style={{fontWeight:500, letterSpacing:'-0.03em'}}>contigo</span>}
+  </span>
+);
+
+/* ------------- Buttons ------------- */
+const BtnPrimary = ({children, className='', ...rest}) => (
+  <button className={"inline-flex items-center justify-center gap-2 rounded-full bg-ink text-cream px-6 py-3.5 text-[15px] font-medium transition-all duration-300 hover:bg-sage-700 active:scale-[0.99] shadow-softer "+className} {...rest}>{children}</button>
+);
+const BtnGhost = ({children, className='', ...rest}) => (
+  <button className={"inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[14px] font-medium text-ink/70 hover:text-ink hover:bg-white border border-stone2/60 transition-all duration-300 "+className} {...rest}>{children}</button>
+);
+const BtnSoft = ({children, className='', ...rest}) => (
+  <button className={"inline-flex items-center justify-center gap-2 rounded-full bg-sage-50 border border-sage-100 text-sage-700 hover:bg-sage-100 px-5 py-2.5 text-[14px] font-medium transition-all duration-300 "+className} {...rest}>{children}</button>
+);
+
+/* ======================================================================
+   DATA: humor palette, tags list, localStorage helpers, mock seed
+   ====================================================================== */
+const HUMORS = [
+  { v:1, label:'Difícil',     color:'#C77D5F', ring:'#E9C1AC', bg:'#FAF1EC' },
+  { v:2, label:'Pesado',      color:'#D18F6F', ring:'#E9C1AC', bg:'#FBF1EA' },
+  { v:3, label:'Mais ou menos', color:'#D6B55C', ring:'#E6D9B8', bg:'#FBF7ED' },
+  { v:4, label:'Tranquilo',   color:'#8EA99A', ring:'#C8D7CE', bg:'#F1F5F2' },
+  { v:5, label:'Leve',        color:'#5F7D6D', ring:'#A7BEB1', bg:'#E8EFE9' },
+];
+const humorOf = v => HUMORS.find(h => h.v === v) || HUMORS[2];
+
+const TAGS_ALL = [
+  'ansioso','cansado','motivado','irritado','triste','em paz','sobrecarregado','animado',
+  'sozinho','acolhido','inquieto','focado','saudoso','grato','vazio','conectado'
+];
+
+const PERIODS = [
+  { key:'manha',  label:'manhã',  greet:'Bom dia',   range:[5, 12] },
+  { key:'tarde',  label:'tarde',  greet:'Boa tarde', range:[12, 18] },
+  { key:'noite',  label:'noite',  greet:'Boa noite', range:[18, 28] }, // overflow for late
+];
+const currentPeriod = (d = new Date()) => {
+  const h = d.getHours();
+  if (h >= 5 && h < 12) return PERIODS[0];
+  if (h >= 12 && h < 18) return PERIODS[1];
+  return PERIODS[2];
+};
+
+const LS_KEY = 'contigo_state_v1';
+const defaultUser = {
+  nome: 'Você',
+  email: 'voce@email.com',
+  configuracoes: {
+    horariosCheckIn: { manha:'09:00', tarde:'14:00', noite:'21:00' },
+    frequencia: 3, // 1, 2 ou 3
+    fazTerapia: null,
+    onboarded: false,
+  }
+};
+const loadState = () => {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return null;
+};
+const saveState = (s) => { try { localStorage.setItem(LS_KEY, JSON.stringify(s)); } catch {} };
+
+/* Seed 14 days of mock check-ins (deterministic-ish). */
+function seedCheckIns() {
+  const now = new Date();
+  const out = [];
+  const tagBag = ['ansioso','cansado','focado','grato','sobrecarregado','em paz','conectado','acolhido','motivado','inquieto','animado','saudoso'];
+  let idCounter = 1;
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(now.getDate() - i);
+    // randomize how many periods recorded
+    const hasM = Math.random() > 0.15;
+    const hasT = Math.random() > 0.25;
+    const hasN = Math.random() > 0.10;
+    const plan = [];
+    if (hasM) plan.push({ p:'manha', h:9 + Math.random()*1.5 });
+    if (hasT) plan.push({ p:'tarde', h:13 + Math.random()*2 });
+    if (hasN) plan.push({ p:'noite', h:20 + Math.random()*2 });
+    // build a weekly trend: middle of period happier, mon/tue heavier
+    const dayOfWeek = d.getDay();
+    const base = (dayOfWeek === 1 || dayOfWeek === 2) ? 2.6 : (dayOfWeek === 5 || dayOfWeek === 6) ? 4.0 : 3.3;
+    plan.forEach(({p, h}) => {
+      const hour = Math.floor(h);
+      const mm = Math.floor((h-hour)*60);
+      const hh = String(hour).padStart(2,'0');
+      const mms = String(mm).padStart(2,'0');
+      const noise = (Math.random() - 0.5) * 1.4;
+      const humor = Math.max(1, Math.min(5, Math.round(base + noise + (p==='noite' ? -0.2 : p==='manha' ? 0.1 : 0))));
+      // pick 1-3 tags
+      const nTags = Math.random() < 0.3 ? 0 : (Math.random() < 0.6 ? 2 : 3);
+      const shuffled = [...tagBag].sort(() => Math.random()-0.5);
+      const tags = shuffled.slice(0, nTags);
+      const withNote = Math.random() < 0.3;
+      const notes = [
+        'reunião longa. precisei de ar.',
+        'almoço com a Clara. saí mais leve.',
+        'acordei sem vontade, mas fui.',
+        'insônia de novo. tá difícil.',
+        'terminei aquele relatório. alívio.',
+        'caminhada de manhã ajudou.',
+        'briga boba com meu pai.',
+        'li um trecho que mexeu comigo.',
+      ];
+      out.push({
+        id: `seed-${idCounter++}`,
+        data: d.toISOString().slice(0,10),
+        hora: `${hh}:${mms}`,
+        periodo: p,
+        humor,
+        tags,
+        nota: withNote ? notes[Math.floor(Math.random()*notes.length)] : '',
+      });
+    });
+  }
+  return out;
+}
+
+/* Ensure state exists; seed on first load */
+function initState() {
+  let s = loadState();
+  if (!s) {
+    s = {
+      user: JSON.parse(JSON.stringify(defaultUser)),
+      checkIns: seedCheckIns(),
+      demo: true,
+    };
+    // try to pick up name from landing cadastro
+    try {
+      const u = JSON.parse(localStorage.getItem('contigo_user') || '{}');
+      if (u && u.nome) s.user.nome = u.nome;
+      else if (u && u.name) s.user.nome = u.name;
+      if (u && u.email) s.user.email = u.email;
+    } catch {}
+    saveState(s);
+  }
+  return s;
+}
+
+/* ------------- global state hook ------------- */
+const StateCtx = React.createContext(null);
+const useApp = () => React.useContext(StateCtx);
+
+/* Converte a resposta de /me (user) para o formato esperado pelos componentes. */
+function normalizeUserFromApi(u) {
+  return {
+    nome: u.nome || 'Você',
+    email: u.email || '',
+    configuracoes: {
+      horariosCheckIn: {
+        manha: (u.configuracoes && u.configuracoes.horariosCheckIn && u.configuracoes.horariosCheckIn.manha) || '09:00',
+        tarde: (u.configuracoes && u.configuracoes.horariosCheckIn && u.configuracoes.horariosCheckIn.tarde) || '14:00',
+        noite: (u.configuracoes && u.configuracoes.horariosCheckIn && u.configuracoes.horariosCheckIn.noite) || '21:00',
+      },
+      frequencia: (u.configuracoes && u.configuracoes.frequencia) || 3,
+      fazTerapia: (u.configuracoes && u.configuracoes.fazTerapia !== undefined) ? u.configuracoes.fazTerapia : null,
+      onboarded: !!(u.configuracoes && u.configuracoes.onboarded),
+    },
+  };
+}
+
+function StateProvider({ children }) {
+  const [state, setState] = React.useState(null); // null = carregando
+  const [loadError, setLoadError] = React.useState(null);
+
+  // Boot: se tem token, carrega /me e check-ins. Senão, manda pra login.
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const token = (() => { try { return localStorage.getItem('contigo_token'); } catch { return null; } })();
+      if (!token) { logoutAndGoToLogin(); return; }
+      try {
+        const [meRes, ciRes] = await Promise.all([
+          contigoApi('/me'),
+          contigoApi('/check-ins?range=all&limit=500'),
+        ]);
+        if (cancelled) return;
+        setState({
+          user: normalizeUserFromApi(meRes.user),
+          checkIns: (ciRes.checkIns || []).map(c => ({
+            id: c.id,
+            data: c.data,
+            hora: c.hora,
+            periodo: c.periodo,
+            humor: c.humor,
+            tags: c.tags || [],
+            nota: c.nota || '',
+          })),
+          demo: false,
+        });
+      } catch (err) {
+        if (cancelled) return;
+        if (err && err.status === 401) {
+          logoutAndGoToLogin();
+          return;
+        }
+        setLoadError('Não consegui carregar seus dados agora. Confira sua conexão e tente recarregar.');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Optimistic: atualiza o state imediatamente e dispara a chamada à API em background.
+  // Se a chamada falhar, volta atrás e mostra um aviso simples (console, por enquanto).
+  const optimistic = (mutator, apiCall) => {
+    let rollback;
+    setState(prev => {
+      rollback = prev;
+      return mutator(prev);
+    });
+    apiCall().catch(err => {
+      console.error('[contigo] falha ao sincronizar com o servidor', err);
+      if (err && err.status === 401) { logoutAndGoToLogin(); return; }
+      if (rollback) setState(rollback);
+    });
+  };
+
+  const api = {
+    state,
+    setUser: (patch) => {
+      optimistic(
+        s => ({ ...s, user: { ...s.user, ...patch } }),
+        () => {
+          const body = {};
+          if (patch.nome !== undefined) body.nome = patch.nome;
+          if (Object.keys(body).length === 0) return Promise.resolve();
+          return contigoApi('/me', { method: 'PATCH', body: JSON.stringify(body) });
+        }
+      );
+    },
+    setConfig: (patch) => {
+      optimistic(
+        s => ({ ...s, user: { ...s.user, configuracoes: { ...s.user.configuracoes, ...patch } } }),
+        () => contigoApi('/me/config', { method: 'PATCH', body: JSON.stringify(patch) })
+      );
+    },
+    addCheckIn: (ci) => {
+      // Gera id temporário para render otimista; substitui quando a API responder
+      const tempId = `tmp-${Date.now()}`;
+      setState(prev => ({ ...prev, checkIns: [...prev.checkIns, { id: tempId, ...ci }] }));
+      contigoApi('/check-ins', {
+        method: 'POST',
+        body: JSON.stringify({
+          humor: ci.humor,
+          tags: ci.tags || [],
+          nota: ci.nota || '',
+          data: ci.data,
+          hora: ci.hora,
+          periodo: ci.periodo,
+        }),
+      }).then(res => {
+        const saved = res.checkIn;
+        setState(prev => ({
+          ...prev,
+          checkIns: prev.checkIns.map(c => c.id === tempId ? {
+            id: saved.id,
+            data: saved.data,
+            hora: saved.hora,
+            periodo: saved.periodo,
+            humor: saved.humor,
+            tags: saved.tags || [],
+            nota: saved.nota || '',
+          } : c),
+        }));
+      }).catch(err => {
+        console.error('[contigo] falha ao salvar check-in', err);
+        if (err && err.status === 401) { logoutAndGoToLogin(); return; }
+        // Remove o check-in otimista se a API falhou
+        setState(prev => ({ ...prev, checkIns: prev.checkIns.filter(c => c.id !== tempId) }));
+      });
+    },
+    removeCheckIn: (id) => {
+      optimistic(
+        s => ({ ...s, checkIns: s.checkIns.filter(c => c.id !== id) }),
+        () => contigoApi(`/check-ins/${encodeURIComponent(id)}`, { method: 'DELETE' })
+      );
+    },
+    resetDemo: () => { /* demo foi desativado no modo server-backed */ },
+    clearAll: () => {
+      optimistic(
+        s => ({ ...s, checkIns: [], demo: false }),
+        () => contigoApi('/me/check-ins', { method: 'DELETE' })
+      );
+    },
+    setDemoOff: () => setState(s => s ? ({ ...s, demo: false }) : s),
+    logout: () => logoutAndGoToLogin(),
+  };
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-6 bg-cream">
+        <div className="max-w-md text-center">
+          <p className="font-display text-[22px] text-ink mb-3">Algo não foi.</p>
+          <p className="text-[14.5px] text-ink/65 mb-6">{loadError}</p>
+          <button onClick={() => window.location.reload()} className="px-5 py-2.5 rounded-full bg-ink text-cream text-[14px]">Recarregar</button>
+          <div className="mt-4">
+            <button onClick={logoutAndGoToLogin} className="text-[13px] text-ink/55 hover:text-ink">Sair e tentar entrar de novo</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!state) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-cream">
+        <div className="flex items-center gap-3 text-ink/55">
+          <span className="w-4 h-4 rounded-full border-2 border-ink/20 border-t-ink/60 animate-spin"/>
+          <span className="text-[14px]">carregando seu espaço...</span>
+        </div>
+      </div>
+    );
+  }
+
+  return <StateCtx.Provider value={api}>{children}</StateCtx.Provider>;
+}
+
+/* ------------- date helpers ------------- */
+const DIAS = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+const DIAS_S = ['dom','seg','ter','qua','qui','sex','sáb'];
+const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const MESES_S = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const formatDateLong = (iso) => {
+  const d = new Date(iso + 'T00:00:00');
+  return `${DIAS[d.getDay()].replace(/^./, c=>c.toUpperCase())}, ${d.getDate()} de ${MESES[d.getMonth()]}`;
+};
+const formatDateShort = (iso) => {
+  const d = new Date(iso + 'T00:00:00');
+  return `${d.getDate()} de ${MESES_S[d.getMonth()]}`;
+};
+const todayISO = () => new Date().toISOString().slice(0,10);
+const daysAgoISO = (n) => { const d = new Date(); d.setDate(d.getDate()-n); return d.toISOString().slice(0,10); };
+const weekStart = (ref = new Date()) => {
+  const d = new Date(ref);
+  const dow = d.getDay();
+  // week = monday-sunday
+  const offset = (dow + 6) % 7;
+  d.setDate(d.getDate() - offset);
+  return d;
+};
+const weekRangeLabel = (start) => {
+  const end = new Date(start); end.setDate(start.getDate()+6);
+  return `${start.getDate()} de ${MESES_S[start.getMonth()]} — ${end.getDate()} de ${MESES_S[end.getMonth()]}`;
+};
+
+/* ======================================================================
+   SHELL: Sidebar + Bottom nav
+   ====================================================================== */
+const NAV = [
+  { to:'/app',          label:'Início',     icon:IcHome,  short:'Início' },
+  { to:'/app/check-in', label:'Check-in',   icon:IcPlus,  short:'Check-in' },
+  { to:'/app/historico',label:'Histórico',  icon:IcList,  short:'Histórico' },
+  { to:'/app/relatorio',label:'Relatório',  icon:IcChart, short:'Relatório' },
+];
+
+function Sidebar() {
+  const { state } = useApp();
+  const [route] = useHashRoute();
+  const active = (to) => route === to || (to !== '/app' && route.startsWith(to));
+  return (
+    <aside className="hidden md:flex flex-col w-[260px] shrink-0 h-screen sticky top-0 border-r border-stone2/70 bg-cream px-5 py-7">
+      <div className="px-2 mb-9">
+        <Logo size={22}/>
+      </div>
+      <nav className="flex flex-col gap-1">
+        {NAV.map(n => {
+          const I = n.icon;
+          const isAct = active(n.to);
+          return (
+            <Link key={n.to} to={n.to} className={"group flex items-center gap-3 px-3 py-2.5 rounded-2xl text-[14.5px] transition-all duration-300 " + (isAct ? "bg-white text-ink shadow-softer border border-stone2/70" : "text-ink/60 hover:text-ink hover:bg-white/60")}>
+              <I size={17} stroke={1.6} className={isAct ? "text-sage-700" : ""}/>
+              <span>{n.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+      <div className="mt-6 pt-6 border-t border-stone2/70">
+        <Link to="/app/config" className={"flex items-center gap-3 px-3 py-2.5 rounded-2xl text-[14.5px] transition-all duration-300 " + (route === '/app/config' ? "bg-white text-ink shadow-softer border border-stone2/70" : "text-ink/60 hover:text-ink hover:bg-white/60")}>
+          <IcCog size={17}/>
+          <span>Configurações</span>
+        </Link>
+      </div>
+      <div className="mt-auto pt-6 border-t border-stone2/70">
+        <div className="px-3 py-2">
+          <div className="text-[11px] tracking-[0.12em] uppercase text-ink/40 mb-1">entrou como</div>
+          <div className="text-[14px] text-ink truncate">{state.user.nome}</div>
+          <div className="text-[12.5px] text-ink/50 truncate">{state.user.email}</div>
+        </div>
+        <button onClick={logoutAndGoToLogin} className="mt-2 w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-[13.5px] text-ink/55 hover:text-ink hover:bg-white/60 transition-all duration-300 text-left">
+          <IcOut size={16}/>
+          <span>Sair</span>
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+function BottomNav() {
+  const [route] = useHashRoute();
+  const active = (to) => route === to || (to !== '/app' && route.startsWith(to));
+  return (
+    <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-cream/90 backdrop-blur border-t border-stone2/70 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+      <div className="flex items-center justify-around">
+        {NAV.map(n => {
+          const I = n.icon;
+          const isAct = active(n.to);
+          return (
+            <Link key={n.to} to={n.to} className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all duration-300">
+              <I size={20} className={isAct ? "text-sage-700" : "text-ink/45"}/>
+              <span className={"text-[10.5px] " + (isAct ? "text-ink" : "text-ink/50")}>{n.short}</span>
+            </Link>
+          );
+        })}
+        <Link to="/app/config" className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl">
+          <IcCog size={20} className={route === '/app/config' ? "text-sage-700" : "text-ink/45"}/>
+          <span className={"text-[10.5px] " + (route === '/app/config' ? "text-ink" : "text-ink/50")}>Mais</span>
+        </Link>
+      </div>
+    </nav>
+  );
+}
+
+/* Top bar on mobile */
+function MobileTop() {
+  const { state, resetDemo } = useApp();
+  return (
+    <header className="md:hidden sticky top-0 z-30 bg-cream/90 backdrop-blur px-5 py-3 flex items-center justify-between border-b border-stone2/60">
+      <Logo size={18}/>
+      {state.demo && (
+        <button onClick={resetDemo} className="text-[11px] px-2.5 py-1 rounded-full bg-sand-50 border border-sand-200 text-ink/60">
+          modo demo
+        </button>
+      )}
+    </header>
+  );
+}
+
+/* Desktop demo-mode flag */
+function DemoFlag() {
+  const { state, resetDemo } = useApp();
+  if (!state.demo) return null;
+  return (
+    <div className="hidden md:flex absolute top-6 right-8 items-center gap-2 bg-sand-50 border border-sand-200 rounded-full pl-3 pr-1 py-1 text-[11.5px] text-ink/60 z-20">
+      <span className="w-1.5 h-1.5 rounded-full bg-terra-400"/>
+      modo demonstração
+      <button onClick={resetDemo} className="ml-1 px-3 py-1 rounded-full bg-white border border-stone2/70 hover:border-ink/40 transition-colors text-ink/70">
+        limpar e começar do zero
+      </button>
+    </div>
+  );
+}
+
+/* ======================================================================
+   DASHBOARD
+   ====================================================================== */
+function Greeting({ nome, doneToday }) {
+  const p = currentPeriod();
+  return (
+    <div className="mb-8">
+      <h1 className="font-display text-[36px] md:text-[44px] leading-[1.05] tracking-[-0.02em] text-ink">
+        {p.greet}, {nome.split(' ')[0]}.
+      </h1>
+      <p className="mt-3 text-[15.5px] text-ink/60 max-w-lg text-pretty">
+        {doneToday
+          ? "Obrigado por ter parado mais cedo. Continua no seu tempo."
+          : "Tô aqui quando você quiser parar um instante."}
+      </p>
+    </div>
+  );
+}
+
+function NextCheckInCard({ checkIns, onGo }) {
+  const p = currentPeriod();
+  const today = todayISO();
+  const todayCIs = checkIns.filter(c => c.data === today);
+  const didThisPeriod = todayCIs.some(c => c.periodo === p.key);
+  // find if user missed earlier today
+  const periodOrder = ['manha','tarde','noite'];
+  const doneKeys = new Set(todayCIs.map(c => c.periodo));
+  const missedEarlier = periodOrder.slice(0, periodOrder.indexOf(p.key)).filter(k => !doneKeys.has(k));
+
+  return (
+    <div className="relative bg-white rounded-3xl border border-stone2/70 shadow-soft p-6 md:p-8 overflow-hidden">
+      <svg viewBox="0 0 600 300" className="absolute -top-10 -right-10 w-[360px] h-[260px] opacity-70 pointer-events-none" aria-hidden="true">
+        <defs>
+          <linearGradient id="nextg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#E3EBE6" stopOpacity="0.8"/>
+            <stop offset="100%" stopColor="#C8D7CE" stopOpacity="0.6"/>
+          </linearGradient>
+        </defs>
+        <path d="M300 0 C 420 40, 560 80, 600 180 L 600 0 Z" fill="url(#nextg)"/>
+        <path d="M180 260 C 280 220, 420 260, 600 220 L 600 300 L 0 300 Z" fill="#F4E0D5" opacity="0.45"/>
+      </svg>
+
+      <div className="relative">
+        <div className="text-[11px] tracking-[0.14em] uppercase text-sage-700 mb-3">check-in da {p.label}</div>
+
+        {didThisPeriod ? (
+          <>
+            <h2 className="font-display text-[26px] md:text-[30px] leading-[1.15] tracking-[-0.015em] text-ink max-w-md">
+              Check-in da {p.label} feito. <span className="italic text-sage-700">Nos vemos {p.key==='noite'?'amanhã':p.key==='manha'?'à tarde':'à noite'}.</span>
+            </h2>
+            <p className="mt-3 text-[14.5px] text-ink/55 max-w-md">
+              Se quiser, pode registrar outro agora. É seu espaço.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <BtnGhost onClick={onGo}>Fazer outro check-in</BtnGhost>
+            </div>
+          </>
+        ) : (
+          <>
+            <h2 className="font-display text-[26px] md:text-[32px] leading-[1.1] tracking-[-0.02em] text-ink max-w-md">
+              {missedEarlier.length > 0 && !didThisPeriod
+                ? <>Perdeu o da {PERIODS.find(x=>x.key===missedEarlier[0]).label}? <span className="italic text-sage-700">Sem problema.</span></>
+                : <>Um momento pra você?</>}
+            </h2>
+            <p className="mt-3 text-[14.5px] text-ink/60 max-w-md">
+              {missedEarlier.length > 0
+                ? "Faz agora se quiser. Leva 30 segundos."
+                : "Três toques na tela e pronto. Leva 30 segundos."}
+            </p>
+            <div className="mt-7">
+              <BtnPrimary onClick={onGo} className="!px-7 !py-4 !text-[15px]">
+                Fazer check-in agora <IcArr size={15}/>
+              </BtnPrimary>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* Mini 7-day chart (pure SVG, no recharts) */
+function Mini7DayChart({ checkIns }) {
+  // average humor by day for last 7 days
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const iso = daysAgoISO(i);
+    const todays = checkIns.filter(c => c.data === iso);
+    const avg = todays.length ? (todays.reduce((a,b)=>a+b.humor,0)/todays.length) : null;
+    const d = new Date(iso+'T00:00:00');
+    days.push({ iso, dow:DIAS_S[d.getDay()], avg });
+  }
+  const H = 96, PAD = 8;
+  const W = 560;
+  const stepX = (W - 24) / (days.length - 1);
+  const y = v => PAD + ((5 - v) / 4) * (H - PAD*2);
+
+  // Build smooth path only across consecutive points that have values
+  const pts = days.map((d,i) => d.avg == null ? null : [12 + i*stepX, y(d.avg)]);
+  let path = '';
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    if (!p) continue;
+    if (path === '' || !pts[i-1]) path += `M ${p[0]} ${p[1]}`;
+    else {
+      const [x0,y0] = pts[i-1], [x1,y1] = p;
+      const cx = (x0+x1)/2;
+      path += ` C ${cx} ${y0}, ${cx} ${y1}, ${x1} ${y1}`;
+    }
+  }
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H+24}`} className="w-full h-[150px]">
+      {[1,2,3,4,5].map(v => (
+        <line key={v} x1="12" x2={W-12} y1={y(v)} y2={y(v)} stroke="#E8E4DE" strokeWidth="0.6"/>
+      ))}
+      <path d={path} stroke="#7A9B8A" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+      {pts.map((p,i) => p ? <circle key={i} cx={p[0]} cy={p[1]} r="3" fill="#FAF8F5" stroke="#7A9B8A" strokeWidth="1.5"/> : null)}
+      {days.map((d,i) => (
+        <text key={i} x={12 + i*stepX} y={H+18} fontSize="11" fontFamily="Inter" fill="#2A2A2A" opacity="0.45" textAnchor="middle">{d.dow}</text>
+      ))}
+    </svg>
+  );
+}
+
+function TopTagsStrip({ checkIns, onTag }) {
+  const since = daysAgoISO(6);
+  const filt = checkIns.filter(c => c.data >= since);
+  const counts = {};
+  filt.forEach(c => (c.tags || []).forEach(t => counts[t] = (counts[t] || 0) + 1));
+  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  if (sorted.length === 0) {
+    return <div className="text-[13.5px] text-ink/45 italic">Suas tags mais frequentes vão aparecer por aqui.</div>;
+  }
+  return (
+    <div>
+      <div className="flex flex-wrap gap-2">
+        {sorted.map(([t, n]) => (
+          <button key={t} onClick={()=>onTag && onTag(t)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sage-50 border border-sage-100 hover:border-sage-300 transition-colors">
+            <span className="text-[13px] text-sage-700">{t}</span>
+            <span className="text-[11px] text-sage-600/70">{n}</span>
+          </button>
+        ))}
+      </div>
+      <p className="mt-3 text-[12.5px] text-ink/45">Toque em uma tag pra ver os momentos.</p>
+    </div>
+  );
+}
+
+function CrisisCard() {
+  const { state } = useApp();
+  const [dismissed, setDismissed] = React.useState(false);
+  // Check last 3 check-ins for humor 1
+  const recent = [...state.checkIns].sort((a,b) => (a.data+a.hora).localeCompare(b.data+b.hora)).slice(-3);
+  const trigger = recent.length === 3 && recent.every(c => c.humor === 1);
+  if (!trigger || dismissed) return null;
+  return (
+    <div className="bg-terra-50/70 border border-terra-200/80 rounded-2xl p-6 md:p-7 relative overflow-hidden">
+      <div className="flex items-start gap-4">
+        <div className="shrink-0 w-10 h-10 rounded-full bg-white border border-terra-200 flex items-center justify-center">
+          <IcHeart size={18} className="text-terra-600"/>
+        </div>
+        <div className="flex-1">
+          <div className="text-[11px] tracking-[0.14em] uppercase text-terra-700 mb-1.5">um recado</div>
+          <p className="font-display text-[19px] md:text-[21px] leading-[1.35] text-ink/85 text-pretty">
+            Tem sido uma sequência difícil. Se quiser conversar com alguém agora, o <strong className="text-ink">CVV</strong> atende 24 horas pelo <strong className="text-ink">188</strong> ou pelo chat em <a className="underline underline-offset-2 text-ink" href="https://cvv.org.br" target="_blank" rel="noreferrer">cvv.org.br</a>.
+          </p>
+          <p className="mt-2 text-[14.5px] text-ink/60">Você não tá sozinho.</p>
+          <div className="mt-4 flex gap-3">
+            <a href="tel:188"><BtnGhost className="!border-terra-300 !text-terra-700"><IcPhone size={15}/> Ligar 188</BtnGhost></a>
+            <button onClick={()=>setDismissed(true)} className="text-[13px] text-ink/55 hover:text-ink px-3">obrigado, tô bem</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Dashboard() {
+  const { state } = useApp();
+  const [, navigate] = useHashRoute();
+  const today = todayISO();
+  const doneToday = state.checkIns.some(c => c.data === today);
+  const weekCount = state.checkIns.filter(c => c.data >= daysAgoISO(6)).length;
+
+  return (
+    <div data-screen-label="01 Dashboard" className="route-fade max-w-4xl mx-auto px-5 md:px-10 py-8 md:py-12">
+      <Greeting nome={state.user.nome} doneToday={doneToday}/>
+      <CrisisCard/>
+      <div className="mt-5">
+        <NextCheckInCard checkIns={state.checkIns} onGo={()=>navigate('/app/check-in')}/>
+      </div>
+
+      <div className="mt-10 grid md:grid-cols-5 gap-5">
+        <div className="md:col-span-3 bg-white rounded-2xl border border-stone2/70 shadow-softer p-6">
+          <div className="flex items-baseline justify-between mb-1">
+            <h3 className="font-display text-[20px] text-ink">Últimos 7 dias</h3>
+            <span className="text-[12px] text-ink/45">humor médio por dia</span>
+          </div>
+          <p className="text-[13.5px] text-ink/55 mb-4">{weekCount} {weekCount === 1 ? 'momento registrado' : 'momentos registrados'} nessa semana.</p>
+          <Mini7DayChart checkIns={state.checkIns}/>
+        </div>
+        <div className="md:col-span-2 bg-white rounded-2xl border border-stone2/70 shadow-softer p-6">
+          <h3 className="font-display text-[20px] text-ink mb-1">Tags da semana</h3>
+          <p className="text-[13.5px] text-ink/55 mb-4">O que mais apareceu nos seus check-ins.</p>
+          <TopTagsStrip checkIns={state.checkIns} onTag={(t)=>navigate('/app/historico?tag='+encodeURIComponent(t))}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ======================================================================
+   CHECK-IN FLOW
+   ====================================================================== */
+
+function HumorBubble({ h, selected, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="group flex flex-col items-center gap-3 transition-all duration-300"
+      aria-label={h.label}
+    >
+      <span
+        className={"relative flex items-center justify-center transition-all duration-300 " + (selected ? "scale-110" : "group-hover:scale-105")}
+        style={{ width: 76, height: 76 }}
+      >
+        <span className="absolute inset-0 rounded-full transition-all duration-300"
+          style={{
+            background: h.bg,
+            border: '1px solid ' + h.ring,
+            boxShadow: selected ? `0 0 0 6px ${h.bg}` : 'none',
+          }}
+        />
+        <span className="relative rounded-full transition-all duration-300"
+          style={{
+            width: selected ? 42 : 32,
+            height: selected ? 42 : 32,
+            background: h.color,
+            opacity: 0.92,
+          }}
+        />
+      </span>
+      <span className={"text-[13.5px] transition-colors " + (selected ? "text-ink" : "text-ink/55 group-hover:text-ink")}>
+        {h.label}
+      </span>
+    </button>
+  );
+}
+
+function StepShell({ step, total, onBack, children }) {
+  return (
+    <div className="max-w-2xl mx-auto px-5 md:px-10 pt-6 md:pt-10 pb-20">
+      <div className="flex items-center gap-3 mb-10">
+        <button onClick={onBack} className="w-9 h-9 rounded-full border border-stone2 flex items-center justify-center text-ink/55 hover:text-ink hover:border-ink/40 transition-colors">
+          {step === 0 ? <IcX size={16}/> : <IcArrL size={15}/>}
+        </button>
+        <div className="flex-1 flex items-center gap-1.5">
+          {Array.from({length: total}).map((_, i) => (
+            <span key={i} className="h-[3px] flex-1 rounded-full overflow-hidden bg-stone2/70">
+              <span className="block h-full bg-sage-500 transition-all duration-500" style={{ width: i <= step ? '100%' : '0%' }}/>
+            </span>
+          ))}
+        </div>
+        <div className="text-[12px] text-ink/45 w-10 text-right">{step+1}/{total}</div>
+      </div>
+      <div className="step-in" key={step}>{children}</div>
+    </div>
+  );
+}
+
+function CheckInFlow() {
+  const { state, addCheckIn } = useApp();
+  const [, navigate] = useHashRoute();
+  const [step, setStep] = React.useState(0);
+  const [humor, setHumor] = React.useState(null);
+  const [tags, setTags] = React.useState([]);
+  const [nota, setNota] = React.useState('');
+  const [saved, setSaved] = React.useState(false);
+
+  React.useEffect(() => {
+    if (saved) {
+      const t = setTimeout(() => navigate('/app'), 3200);
+      return () => clearTimeout(t);
+    }
+  }, [saved]);
+
+  const back = () => {
+    if (step === 0) navigate('/app');
+    else setStep(s => s - 1);
+  };
+  const save = () => {
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    addCheckIn({
+      data: now.toISOString().slice(0,10),
+      hora: `${hh}:${mm}`,
+      periodo: currentPeriod(now).key,
+      humor,
+      tags,
+      nota: nota.trim(),
+    });
+    setSaved(true);
+  };
+
+  if (saved) {
+    return (
+      <div data-screen-label="02 Check-in (done)" className="min-h-[80vh] flex items-center justify-center px-6 route-fade">
+        <div className="text-center max-w-md">
+          <div className="mx-auto mb-7 w-20 h-20 rounded-full bg-sage-50 border border-sage-200 flex items-center justify-center">
+            <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#5F7D6D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path className="check-path" d="M20 6L9 17l-5-5"/>
+            </svg>
+          </div>
+          <h1 className="font-display text-[34px] md:text-[40px] leading-[1.1] tracking-[-0.02em] text-ink mb-3">
+            Registrado. <span className="italic text-sage-700">Obrigado por ter parado.</span>
+          </h1>
+          <p className="text-[16px] text-ink/60 mb-3">Nos vemos no próximo check-in.</p>
+
+          {humor === 1 && (
+            <div className="mt-6 bg-terra-50 border border-terra-200 rounded-2xl p-5 text-left">
+              <p className="text-[14px] text-ink/75 leading-[1.6]">
+                Obrigado por ter parado mesmo assim. Se você precisar de apoio agora, o <strong className="text-ink">CVV</strong> atende 24h pelo <strong className="text-ink">188</strong>.
+              </p>
+            </div>
+          )}
+
+          <div className="mt-8">
+            <Link to="/app"><BtnGhost>Voltar ao início</BtnGhost></Link>
+          </div>
+          <p className="mt-4 text-[12px] text-ink/40">Voltando em alguns segundos…</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div data-screen-label="02 Check-in" className="route-fade">
+      <StepShell step={step} total={3} onBack={back}>
+        {step === 0 && (
+          <div>
+            <h1 className="font-display text-[36px] md:text-[44px] leading-[1.05] tracking-[-0.02em] text-ink mb-2">
+              Como você tá <span className="italic text-sage-700">agora?</span>
+            </h1>
+            <p className="text-[15px] text-ink/55 mb-10">Sem pensar muito. A primeira resposta costuma ser a mais honesta.</p>
+
+            <div className="grid grid-cols-5 gap-2 md:gap-6 justify-items-center mt-12">
+              {HUMORS.map(h => (
+                <HumorBubble key={h.v} h={h} selected={humor === h.v}
+                  onClick={() => { setHumor(h.v); setTimeout(()=>setStep(1), 260); }}/>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {step === 1 && (
+          <div>
+            <h1 className="font-display text-[36px] md:text-[44px] leading-[1.05] tracking-[-0.02em] text-ink mb-2">
+              O que tá <span className="italic text-sage-700">presente?</span>
+            </h1>
+            <p className="text-[15px] text-ink/55 mb-8">Escolha quantas quiser. Ou nenhuma.</p>
+
+            <div className="flex flex-wrap gap-2.5">
+              {TAGS_ALL.map(t => {
+                const sel = tags.includes(t);
+                return (
+                  <button key={t} onClick={() => setTags(sel ? tags.filter(x=>x!==t) : [...tags, t])}
+                    className={"px-4 py-2.5 rounded-full text-[14px] transition-all duration-300 border " + (sel
+                      ? "bg-sage-500 border-sage-500 text-cream"
+                      : "bg-white border-stone2 text-ink/65 hover:border-sage-300 hover:text-ink")}
+                  >
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-10 flex items-center gap-3">
+              <BtnPrimary onClick={()=>setStep(2)} className="!px-7">
+                Continuar <IcArr size={15}/>
+              </BtnPrimary>
+              <button onClick={()=>setStep(2)} className="text-[13.5px] text-ink/55 hover:text-ink px-3 py-2">Pular</button>
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div>
+            <h1 className="font-display text-[36px] md:text-[44px] leading-[1.05] tracking-[-0.02em] text-ink mb-2">
+              Quer registrar alguma coisa?
+            </h1>
+            <p className="text-[15px] text-ink/55 mb-8">Uma linha, uma palavra, ou nada. Como preferir.</p>
+
+            <textarea
+              value={nota}
+              onChange={e=>setNota(e.target.value)}
+              placeholder="..."
+              autoFocus
+              rows={6}
+              className="w-full bg-white border border-stone2 rounded-2xl px-5 py-4 text-[16px] text-ink placeholder:text-ink/30 ring-focus resize-none leading-[1.55]"
+            />
+
+            <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <BtnPrimary onClick={save} className="!px-7">Salvar</BtnPrimary>
+              <BtnGhost onClick={()=>{ setNota(''); save(); }}>Salvar sem nota</BtnGhost>
+            </div>
+          </div>
+        )}
+      </StepShell>
+    </div>
+  );
+}
+
+/* ======================================================================
+   HISTÓRICO
+   ====================================================================== */
+
+function CheckInCard({ ci, onRemove }) {
+  const h = humorOf(ci.humor);
+  return (
+    <div className="group bg-white rounded-2xl border border-stone2/70 shadow-softer p-5 flex items-start gap-4 transition-all duration-300 hover:border-stone2">
+      <span className="shrink-0 mt-1 w-8 h-8 rounded-full flex items-center justify-center" style={{ background:h.bg, border:`1px solid ${h.ring}` }}>
+        <span className="w-3.5 h-3.5 rounded-full" style={{ background:h.color }}/>
+      </span>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[13.5px] text-ink/80">{ci.hora}</span>
+          <span className="text-[12px] text-ink/40">·</span>
+          <span className="text-[13px] text-ink/55 capitalize">{ci.periodo}</span>
+          <span className="text-[12px] text-ink/40">·</span>
+          <span className="text-[13px]" style={{ color:h.color }}>{h.label.toLowerCase()}</span>
+        </div>
+        {ci.tags && ci.tags.length > 0 && (
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
+            {ci.tags.map(t => (
+              <span key={t} className="px-2 py-0.5 rounded-full bg-sage-50 border border-sage-100 text-[12px] text-sage-700">{t}</span>
+            ))}
+          </div>
+        )}
+        {ci.nota && (
+          <p className="mt-2.5 font-display italic text-[15px] leading-[1.5] text-ink/75 text-pretty">
+            "{ci.nota}"
+          </p>
+        )}
+      </div>
+      <button onClick={()=>onRemove && onRemove(ci.id)} className="opacity-0 group-hover:opacity-100 transition-opacity w-7 h-7 rounded-full hover:bg-stone2/60 flex items-center justify-center text-ink/45 hover:text-terra-600" aria-label="apagar">
+        <IcTrash size={14}/>
+      </button>
+    </div>
+  );
+}
+
+function Historico() {
+  const { state, removeCheckIn } = useApp();
+  const [route] = useHashRoute();
+  const urlTag = (() => {
+    const q = route.split('?')[1];
+    if (!q) return null;
+    const params = new URLSearchParams(q);
+    return params.get('tag');
+  })();
+  const [range, setRange] = React.useState('7'); // 7 | 30 | all
+  const [tagFilter, setTagFilter] = React.useState(urlTag || null);
+
+  React.useEffect(() => { if (urlTag) setTagFilter(urlTag); }, [urlTag]);
+
+  const since = range === 'all' ? '0000-01-01' : daysAgoISO(range === '7' ? 6 : 29);
+  const filtered = state.checkIns
+    .filter(c => c.data >= since)
+    .filter(c => !tagFilter || (c.tags || []).includes(tagFilter))
+    .sort((a,b) => (b.data+b.hora).localeCompare(a.data+a.hora));
+
+  // Build top tags of period
+  const counts = {};
+  state.checkIns.filter(c => c.data >= since).forEach(c => (c.tags||[]).forEach(t => counts[t] = (counts[t]||0)+1));
+  const topTags = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([t])=>t);
+
+  // group by day
+  const byDay = {};
+  filtered.forEach(c => { (byDay[c.data] ||= []).push(c); });
+
+  // List of all days in the range (for "sem registros" placeholders)
+  const endISO = todayISO();
+  const startISO = range === 'all' ? (filtered[filtered.length-1]?.data || endISO) : since;
+  const dayList = [];
+  {
+    const s = new Date(startISO+'T00:00:00'), e = new Date(endISO+'T00:00:00');
+    for (let d = new Date(e); d >= s; d.setDate(d.getDate()-1)) {
+      dayList.push(d.toISOString().slice(0,10));
+    }
+  }
+
+  return (
+    <div data-screen-label="03 Histórico" className="route-fade max-w-4xl mx-auto px-5 md:px-10 py-8 md:py-12">
+      <header className="mb-8">
+        <h1 className="font-display text-[36px] md:text-[44px] leading-[1.05] tracking-[-0.02em] text-ink mb-2">Seus registros</h1>
+        <p className="text-[15px] text-ink/55">Uma linha do tempo pra olhar quando quiser.</p>
+      </header>
+
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        {[
+          { v:'7', label:'Últimos 7 dias' },
+          { v:'30', label:'Últimos 30 dias' },
+          { v:'all', label:'Tudo' },
+        ].map(f => (
+          <button key={f.v} onClick={()=>setRange(f.v)}
+            className={"px-4 py-2 rounded-full text-[13px] transition-all duration-300 border " + (range === f.v
+              ? "bg-ink text-cream border-ink"
+              : "bg-white border-stone2 text-ink/65 hover:border-ink/40")}>
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {topTags.length > 0 && (
+        <div className="mb-8">
+          <div className="text-[11px] tracking-[0.14em] uppercase text-ink/40 mb-2.5">filtrar por tag</div>
+          <div className="flex flex-wrap gap-2">
+            {topTags.map(t => {
+              const sel = tagFilter === t;
+              return (
+                <button key={t} onClick={()=>setTagFilter(sel ? null : t)}
+                  className={"px-3 py-1.5 rounded-full text-[13px] transition-all duration-300 border " + (sel
+                    ? "bg-sage-500 border-sage-500 text-cream"
+                    : "bg-sage-50 border-sage-100 text-sage-700 hover:border-sage-300")}>
+                  {t}
+                </button>
+              );
+            })}
+            {tagFilter && (
+              <button onClick={()=>setTagFilter(null)} className="px-3 py-1.5 rounded-full text-[13px] text-ink/55 hover:text-ink">
+                limpar
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {state.checkIns.length === 0 ? (
+        <EmptyState/>
+      ) : filtered.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-stone2/70 p-10 text-center">
+          <p className="font-display text-[20px] text-ink/70">Nenhum registro nesse filtro.</p>
+          <p className="text-[13.5px] text-ink/50 mt-2">Tente outro período ou limpe a tag.</p>
+        </div>
+      ) : (
+        <div className="space-y-10">
+          {dayList.map(iso => {
+            const cis = byDay[iso];
+            return (
+              <section key={iso}>
+                <h2 className="font-display text-[20px] md:text-[22px] tracking-[-0.01em] text-ink mb-4">{formatDateLong(iso)}</h2>
+                {cis && cis.length > 0 ? (
+                  <div className="space-y-3">
+                    {cis.sort((a,b)=>a.hora.localeCompare(b.hora)).map(ci => (
+                      <CheckInCard key={ci.id} ci={ci} onRemove={removeCheckIn}/>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-[13.5px] text-ink/40 italic pl-1">sem registros nesse dia</div>
+                )}
+              </section>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="bg-white rounded-3xl border border-stone2/70 p-10 md:p-16 text-center">
+      <svg viewBox="0 0 200 120" className="w-[220px] mx-auto mb-6">
+        <path d="M10 80 C 40 40, 80 100, 120 60 S 190 50, 195 70" stroke="#7A9B8A" strokeWidth="1.6" fill="none" opacity="0.55"/>
+        <path d="M10 95 C 50 75, 90 110, 140 85 S 190 85, 195 90" stroke="#C77D5F" strokeWidth="1.2" fill="none" opacity="0.45"/>
+        <circle cx="100" cy="50" r="16" fill="#F1F5F2" stroke="#C8D7CE"/>
+      </svg>
+      <h3 className="font-display text-[24px] text-ink mb-2">Seus registros vão aparecer aqui.</h3>
+      <p className="text-[14.5px] text-ink/55 mb-6">Comece com o primeiro check-in.</p>
+      <Link to="/app/check-in"><BtnPrimary>Fazer check-in <IcArr size={15}/></BtnPrimary></Link>
+    </div>
+  );
+}
+
+/* ======================================================================
+   RELATÓRIO SEMANAL
+   ====================================================================== */
+
+function WeekPicker({ start, onShift }) {
+  return (
+    <div className="inline-flex items-center gap-1 bg-white border border-stone2 rounded-full p-1">
+      <button onClick={()=>onShift(-1)} className="w-8 h-8 rounded-full hover:bg-stone2/40 text-ink/60 flex items-center justify-center" aria-label="semana anterior"><IcArrL size={15}/></button>
+      <span className="px-3 py-1 text-[13px] text-ink/75">{weekRangeLabel(start)}</span>
+      <button onClick={()=>onShift(1)} className="w-8 h-8 rounded-full hover:bg-stone2/40 text-ink/60 flex items-center justify-center" aria-label="próxima semana"><IcArr size={15}/></button>
+    </div>
+  );
+}
+
+function WeekChart({ weekData, onPickDay }) {
+  const H = 220, PAD_Y = 30;
+  const W = 720;
+  const left = 64, right = 20;
+  const stepX = (W - left - right) / 6;
+  const y = v => PAD_Y + ((5 - v) / 4) * (H - PAD_Y*2);
+
+  const pts = weekData.map((d,i) => d.avg == null ? null : [left + i*stepX, y(d.avg)]);
+  let path = '';
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    if (!p) continue;
+    if (path === '' || !pts[i-1]) path += `M ${p[0]} ${p[1]}`;
+    else {
+      const [x0,y0] = pts[i-1], [x1,y1] = p;
+      const cx = (x0+x1)/2;
+      path += ` C ${cx} ${y0}, ${cx} ${y1}, ${x1} ${y1}`;
+    }
+  }
+  // area
+  let area = '';
+  const areaPts = pts.filter(Boolean);
+  if (areaPts.length) {
+    area += path + ` L ${areaPts[areaPts.length-1][0]} ${H-PAD_Y} L ${areaPts[0][0]} ${H-PAD_Y} Z`;
+  }
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[240px] md:h-[280px]">
+      {/* Y axis labels */}
+      {[1,2,3,4,5].map(v => (
+        <g key={v}>
+          <line x1={left} x2={W-right} y1={y(v)} y2={y(v)} stroke="#E8E4DE" strokeWidth="0.6"/>
+          <text x={left-10} y={y(v)+4} textAnchor="end" fontSize="11" fontFamily="Inter" fill="#2A2A2A" opacity="0.45">
+            {humorOf(v).label}
+          </text>
+        </g>
+      ))}
+      {/* area */}
+      <path d={area} fill="#7A9B8A" opacity="0.08"/>
+      {/* line */}
+      <path d={path} stroke="#5F7D6D" strokeWidth="2" fill="none" strokeLinecap="round"/>
+      {/* points */}
+      {pts.map((p,i) => p ? (
+        <g key={i} className="cursor-pointer" onClick={()=>onPickDay && onPickDay(weekData[i].iso)}>
+          <circle cx={p[0]} cy={p[1]} r="12" fill="transparent"/>
+          <circle cx={p[0]} cy={p[1]} r="5" fill="#FAF8F5" stroke="#5F7D6D" strokeWidth="1.8"/>
+        </g>
+      ) : null)}
+      {/* X labels */}
+      {weekData.map((d,i) => (
+        <text key={i} x={left + i*stepX} y={H-8} textAnchor="middle" fontSize="11" fontFamily="Inter" fill="#2A2A2A" opacity="0.55">{d.dow}</text>
+      ))}
+    </svg>
+  );
+}
+
+function Relatorio() {
+  const { state } = useApp();
+  const [weekOffset, setWeekOffset] = React.useState(0);
+  const [dayModal, setDayModal] = React.useState(null);
+
+  const start = (() => { const s = weekStart(); s.setDate(s.getDate() + weekOffset*7); return s; })();
+  const prevStart = new Date(start); prevStart.setDate(prevStart.getDate() - 7);
+  const end = new Date(start); end.setDate(start.getDate()+6);
+
+  // week data by day
+  const weekData = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start); d.setDate(start.getDate()+i);
+    const iso = d.toISOString().slice(0,10);
+    const cis = state.checkIns.filter(c => c.data === iso);
+    const avg = cis.length ? cis.reduce((a,b)=>a+b.humor,0)/cis.length : null;
+    weekData.push({ iso, dow: DIAS_S[d.getDay()], avg, cis });
+  }
+  const weekCIs = weekData.flatMap(d => d.cis);
+  const prevWeekCIs = state.checkIns.filter(c => {
+    const cd = new Date(c.data+'T00:00:00');
+    return cd >= prevStart && cd < start;
+  });
+
+  // period stats
+  const byPeriod = { manha:[], tarde:[], noite:[] };
+  weekCIs.forEach(c => { (byPeriod[c.periodo] ||= []).push(c); });
+  const periodStat = (key) => {
+    const arr = byPeriod[key] || [];
+    if (!arr.length) return { avg:null, topTag:null, n:0 };
+    const avg = arr.reduce((a,b)=>a+b.humor,0)/arr.length;
+    const counts = {};
+    arr.forEach(c => (c.tags||[]).forEach(t => counts[t] = (counts[t]||0)+1));
+    const topTag = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || null;
+    return { avg, topTag, n:arr.length };
+  };
+  const stMan = periodStat('manha'), stTar = periodStat('tarde'), stNoi = periodStat('noite');
+
+  // tag counts
+  const tagCounts = {};
+  weekCIs.forEach(c => (c.tags||[]).forEach(t => tagCounts[t] = (tagCounts[t]||0)+1));
+  const sortedTags = Object.entries(tagCounts).sort((a,b)=>b[1]-a[1]);
+  const maxTag = sortedTags[0]?.[1] || 1;
+
+  // notes
+  const notes = weekCIs.filter(c => c.nota && c.nota.trim().length > 0)
+    .sort((a,b)=>(a.data+a.hora).localeCompare(b.data+b.hora));
+
+  // comparison with prev week
+  const diffN = weekCIs.length - prevWeekCIs.length;
+  const prevTagCounts = {};
+  prevWeekCIs.forEach(c => (c.tags||[]).forEach(t => prevTagCounts[t] = (prevTagCounts[t]||0)+1));
+  const diffLines = [];
+  if (prevWeekCIs.length > 0 || weekCIs.length > 0) {
+    diffLines.push(diffN === 0
+      ? `Você fez o mesmo número de registros que a semana passada (${weekCIs.length}).`
+      : diffN > 0
+        ? `Essa semana teve mais registros que a anterior (${weekCIs.length} vs ${prevWeekCIs.length}).`
+        : `Essa semana teve menos registros que a anterior (${weekCIs.length} vs ${prevWeekCIs.length}).`);
+    sortedTags.slice(0,3).forEach(([t, n]) => {
+      const prev = prevTagCounts[t] || 0;
+      if (prev > 0 && prev !== n) {
+        const times = prev > n ? (prev/n).toFixed(1) : (n/prev).toFixed(1);
+        const dir = n < prev ? 'menos' : 'mais';
+        diffLines.push(`A tag "${t}" apareceu ${times}x ${dir} essa semana.`);
+      }
+    });
+  }
+
+  // Context phrase for periods
+  let periodPhrase = null;
+  if (stMan.avg != null && stNoi.avg != null) {
+    if (stMan.avg - stNoi.avg >= 0.5) periodPhrase = "Suas manhãs foram mais leves que suas noites essa semana.";
+    else if (stNoi.avg - stMan.avg >= 0.5) periodPhrase = "Suas noites foram mais leves que suas manhãs essa semana.";
+    else periodPhrase = "Os três períodos do dia foram parecidos essa semana.";
+  }
+
+  const handleExport = () => window.print();
+
+  return (
+    <div data-screen-label="04 Relatório" className="route-fade max-w-4xl mx-auto px-5 md:px-10 py-8 md:py-12" id="report-root">
+      <header className="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        <div>
+          <div className="text-[12px] tracking-[0.2em] uppercase text-sage-700 mb-3">relatório</div>
+          <h1 className="font-display text-[40px] md:text-[52px] leading-[1.05] tracking-[-0.02em] text-ink">Sua semana</h1>
+          <div className="mt-4">
+            <WeekPicker start={start} onShift={d=>setWeekOffset(w=>w+d)}/>
+          </div>
+        </div>
+        <button onClick={handleExport} className="no-print inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-stone2 bg-white text-[13.5px] text-ink/75 hover:border-ink/40 transition-colors">
+          <IcDownload size={15}/> Exportar em PDF
+        </button>
+      </header>
+
+      {/* Section 1 — chart */}
+      <section className="bg-white rounded-3xl border border-stone2/70 shadow-softer p-6 md:p-8 mb-6">
+        <div className="flex items-baseline justify-between mb-3">
+          <h2 className="font-display text-[22px] text-ink">Humor ao longo da semana</h2>
+          <span className="text-[12.5px] text-ink/50">clique num ponto pra ver o dia</span>
+        </div>
+        <WeekChart weekData={weekData} onPickDay={(iso)=>setDayModal(iso)}/>
+      </section>
+
+      {/* Section 2 — periods */}
+      <section className="mb-6">
+        <h2 className="font-display text-[22px] text-ink mb-1">Padrões por período</h2>
+        {periodPhrase && <p className="text-[14.5px] text-ink/55 mb-4 text-pretty">{periodPhrase}</p>}
+        <div className="grid md:grid-cols-3 gap-4">
+          {[
+            { k:'manha', label:'Manhã', s:stMan },
+            { k:'tarde', label:'Tarde', s:stTar },
+            { k:'noite', label:'Noite', s:stNoi },
+          ].map(({k, label, s}) => {
+            const h = s.avg == null ? null : humorOf(Math.round(s.avg));
+            return (
+              <div key={k} className="bg-white rounded-2xl border border-stone2/70 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-[12px] tracking-[0.14em] uppercase text-ink/45">{label}</span>
+                  <span className="text-[12px] text-ink/40">{s.n} {s.n === 1 ? 'registro' : 'registros'}</span>
+                </div>
+                {s.avg == null ? (
+                  <p className="text-[14px] text-ink/45 italic">sem registros</p>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: h.bg, border:`1px solid ${h.ring}` }}>
+                        <span className="w-4 h-4 rounded-full" style={{ background:h.color }}/>
+                      </span>
+                      <div>
+                        <div className="font-display text-[24px] leading-none text-ink">{s.avg.toFixed(1)}</div>
+                        <div className="text-[12.5px]" style={{ color:h.color }}>média · {h.label.toLowerCase()}</div>
+                      </div>
+                    </div>
+                    {s.topTag && (
+                      <div className="mt-3 text-[13px] text-ink/60">
+                        mais presente: <span className="px-2 py-0.5 rounded-full bg-sage-50 border border-sage-100 text-sage-700">{s.topTag}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Section 3 — tags */}
+      <section className="bg-white rounded-3xl border border-stone2/70 shadow-softer p-6 md:p-8 mb-6">
+        <h2 className="font-display text-[22px] text-ink mb-5">Tags da semana</h2>
+        {sortedTags.length === 0 ? (
+          <p className="text-[14px] text-ink/45 italic">nenhuma tag usada essa semana</p>
+        ) : (
+          <div className="grid md:grid-cols-5 gap-8 items-start">
+            <div className="md:col-span-3">
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-2">
+                {sortedTags.map(([t, n]) => {
+                  const ratio = n / maxTag;
+                  const size = 14 + ratio * 20; // 14..34
+                  const op = 0.55 + ratio * 0.45;
+                  return (
+                    <span key={t} className="font-display text-ink" style={{ fontSize:size, opacity:op, lineHeight:1.05 }}>{t}</span>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="md:col-span-2">
+              <div className="text-[11px] tracking-[0.14em] uppercase text-ink/40 mb-3">top 5</div>
+              <div className="space-y-2">
+                {sortedTags.slice(0,5).map(([t, n]) => (
+                  <div key={t} className="flex items-center justify-between text-[14px]">
+                    <span className="text-ink/75">{t}</span>
+                    <span className="text-ink/50 tabular-nums">{n}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Section 4 — notes */}
+      <section className="bg-white rounded-3xl border border-stone2/70 shadow-softer p-6 md:p-8 mb-6">
+        <div className="text-[12px] tracking-[0.2em] uppercase text-sage-700 mb-2">leve pra sua sessão</div>
+        <h2 className="font-display text-[22px] text-ink mb-5">Seus momentos</h2>
+        {notes.length === 0 ? (
+          <p className="text-[14px] text-ink/45 italic">você não registrou notas escritas essa semana — sem problema.</p>
+        ) : (
+          <ul className="space-y-5">
+            {notes.map(c => {
+              const h = humorOf(c.humor);
+              return (
+                <li key={c.id} className="flex gap-4">
+                  <span className="mt-1.5 w-2 h-2 rounded-full shrink-0" style={{ background:h.color }}/>
+                  <div>
+                    <div className="text-[12px] text-ink/45">{formatDateShort(c.data)} · {c.hora}</div>
+                    <p className="font-display italic text-[17px] leading-[1.45] text-ink/85 mt-0.5 text-pretty">"{c.nota}"</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
+      {/* Section 5 — comparison */}
+      {diffLines.length > 0 && (
+        <section className="bg-sage-50/50 border border-sage-100 rounded-3xl p-6 md:p-8 mb-6">
+          <h2 className="font-display text-[22px] text-ink mb-3">Comparado com a semana passada</h2>
+          <ul className="space-y-2">
+            {diffLines.map((l, i) => (
+              <li key={i} className="flex items-start gap-3 text-[14.5px] text-ink/75">
+                <span className="mt-2 w-1.5 h-1.5 rounded-full bg-sage-500 shrink-0"/>
+                <span>{l}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {dayModal && <DayModal iso={dayModal} checkIns={state.checkIns.filter(c=>c.data===dayModal)} onClose={()=>setDayModal(null)}/>}
+    </div>
+  );
+}
+
+function DayModal({ iso, checkIns, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-6" onClick={onClose}>
+      <div className="absolute inset-0 bg-ink/30 backdrop-blur-sm"/>
+      <div className="relative bg-cream rounded-t-3xl md:rounded-3xl border border-stone2 w-full max-w-lg max-h-[80vh] overflow-auto p-6 md:p-8 step-in" onClick={e=>e.stopPropagation()}>
+        <div className="flex items-start justify-between mb-5">
+          <div>
+            <div className="text-[11px] tracking-[0.14em] uppercase text-sage-700 mb-1">{checkIns.length} {checkIns.length === 1 ? 'registro' : 'registros'}</div>
+            <h3 className="font-display text-[24px] text-ink">{formatDateLong(iso)}</h3>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-stone2/50 flex items-center justify-center text-ink/55"><IcX size={15}/></button>
+        </div>
+        {checkIns.length === 0 ? (
+          <p className="text-[14px] text-ink/45 italic">sem registros nesse dia</p>
+        ) : (
+          <div className="space-y-3">
+            {checkIns.sort((a,b)=>a.hora.localeCompare(b.hora)).map(ci => <CheckInCard key={ci.id} ci={ci}/>)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ======================================================================
+   CONFIGURAÇÕES
+   ====================================================================== */
+function Section({ title, subtitle, children }) {
+  return (
+    <section className="bg-white rounded-2xl border border-stone2/70 p-6 md:p-8 mb-5">
+      <h2 className="font-display text-[20px] text-ink mb-1">{title}</h2>
+      {subtitle && <p className="text-[13.5px] text-ink/55 mb-5">{subtitle}</p>}
+      <div className={subtitle ? "" : "mt-4"}>{children}</div>
+    </section>
+  );
+}
+
+function Config() {
+  const { state, setUser, setConfig, clearAll } = useApp();
+  const u = state.user;
+  const cfg = u.configuracoes;
+  const [nome, setNome] = React.useState(u.nome);
+  const [confirmDelete, setConfirmDelete] = React.useState(0);
+  const [crisisOpen, setCrisisOpen] = React.useState(false);
+
+  const exportData = (fmt) => {
+    if (fmt === 'json') {
+      const blob = new Blob([JSON.stringify({ user:u, checkIns:state.checkIns }, null, 2)], { type:'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download='contigo-dados.json'; a.click(); URL.revokeObjectURL(url);
+    } else {
+      const lines = ['data,hora,periodo,humor,tags,nota'];
+      state.checkIns.forEach(c => {
+        const safe = (c.nota || '').replace(/"/g,'""');
+        lines.push(`${c.data},${c.hora},${c.periodo},${c.humor},"${(c.tags||[]).join(';')}","${safe}"`);
+      });
+      const blob = new Blob([lines.join('\n')], { type:'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download='contigo-dados.csv'; a.click(); URL.revokeObjectURL(url);
+    }
+  };
+
+  return (
+    <div data-screen-label="05 Config" className="route-fade max-w-3xl mx-auto px-5 md:px-10 py-8 md:py-12">
+      <h1 className="font-display text-[36px] md:text-[44px] leading-[1.05] tracking-[-0.02em] text-ink mb-8">Configurações</h1>
+
+      <Section title="Perfil">
+        <label className="block mb-4">
+          <span className="block text-[13px] text-ink/70 mb-2">Nome</span>
+          <div className="flex gap-2">
+            <input type="text" className="flex-1 bg-cream border border-stone2 rounded-2xl px-4 py-3 text-[15px] ring-focus" value={nome} onChange={e=>setNome(e.target.value)}/>
+            <BtnGhost onClick={()=>setUser({ nome })}>Salvar</BtnGhost>
+          </div>
+        </label>
+        <div className="mb-4">
+          <span className="block text-[13px] text-ink/70 mb-2">Email</span>
+          <div className="px-4 py-3 rounded-2xl bg-stone2/30 text-ink/70 text-[14.5px]">{u.email}</div>
+        </div>
+        <BtnGhost>Trocar senha</BtnGhost>
+      </Section>
+
+      <Section title="Horários dos check-ins" subtitle="Você receberá um lembrete gentil nesses horários.">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {[
+            { k:'manha', label:'Manhã' },
+            { k:'tarde', label:'Tarde' },
+            { k:'noite', label:'Noite' },
+          ].map(({k, label}) => (
+            <label key={k} className="block">
+              <span className="block text-[12px] tracking-[0.14em] uppercase text-ink/45 mb-2">{label}</span>
+              <input type="time" value={cfg.horariosCheckIn[k]}
+                onChange={e=>setConfig({ horariosCheckIn: { ...cfg.horariosCheckIn, [k]: e.target.value }})}
+                className="w-full bg-cream border border-stone2 rounded-2xl px-4 py-3 text-[15px] ring-focus"/>
+            </label>
+          ))}
+        </div>
+      </Section>
+
+      <Section title="Frequência">
+        <div className="space-y-2">
+          {[
+            { v:3, label:'3x por dia', hint:'recomendado · manhã, tarde e noite' },
+            { v:2, label:'2x por dia', hint:'manhã e noite' },
+            { v:1, label:'1x por dia', hint:'só à noite' },
+          ].map(opt => {
+            const sel = cfg.frequencia === opt.v;
+            return (
+              <button key={opt.v} onClick={()=>setConfig({ frequencia: opt.v })}
+                className={"w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl border text-left transition-all duration-300 " + (sel
+                  ? "bg-sage-50 border-sage-300"
+                  : "bg-cream border-stone2/60 hover:border-ink/30")}>
+                <span className={"w-5 h-5 rounded-full border flex items-center justify-center " + (sel ? "border-sage-500 bg-sage-500" : "border-stone2 bg-white")}>
+                  {sel && <span className="w-2 h-2 rounded-full bg-cream"/>}
+                </span>
+                <div className="flex-1">
+                  <div className="text-[14.5px] text-ink">{opt.label}</div>
+                  <div className="text-[12.5px] text-ink/50">{opt.hint}</div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </Section>
+
+      <Section title="Seus dados" subtitle="Tudo é seu. Você leva quando quiser.">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <BtnGhost onClick={()=>exportData('json')}><IcDownload size={15}/> Baixar JSON</BtnGhost>
+          <BtnGhost onClick={()=>exportData('csv')}><IcDownload size={15}/> Baixar CSV</BtnGhost>
+        </div>
+        <div className="mt-8 pt-6 border-t border-stone2/70">
+          {confirmDelete === 0 && (
+            <button onClick={()=>setConfirmDelete(1)} className="text-[13.5px] text-terra-700 hover:text-terra-800 underline underline-offset-4 decoration-terra-200 hover:decoration-terra-500">Apagar minha conta</button>
+          )}
+          {confirmDelete === 1 && (
+            <div className="bg-terra-50 border border-terra-200 rounded-2xl p-5">
+              <p className="text-[14px] text-ink/80 mb-3">Tem certeza? Seus registros serão apagados. Não dá pra desfazer.</p>
+              <div className="flex gap-3">
+                <button onClick={()=>setConfirmDelete(2)} className="px-4 py-2 rounded-full bg-terra-600 text-cream text-[13px]">Sim, apagar tudo</button>
+                <button onClick={()=>setConfirmDelete(0)} className="px-4 py-2 rounded-full border border-stone2 bg-white text-[13px] text-ink/70">Cancelar</button>
+              </div>
+            </div>
+          )}
+          {confirmDelete === 2 && (
+            <div className="bg-terra-50 border border-terra-300 rounded-2xl p-5">
+              <p className="text-[14px] text-ink/80 mb-3"><strong>Última confirmação.</strong> Vamos apagar tudo agora.</p>
+              <div className="flex gap-3">
+                <button onClick={async ()=>{
+                  try {
+                    await contigoApi('/me', { method: 'DELETE' });
+                  } catch (err) {
+                    console.error('[contigo] falha ao apagar conta', err);
+                  } finally {
+                    logoutAndGoToLogin();
+                  }
+                }} className="px-4 py-2 rounded-full bg-terra-700 text-cream text-[13px]">Apagar definitivamente</button>
+                <button onClick={()=>setConfirmDelete(0)} className="px-4 py-2 rounded-full border border-stone2 bg-white text-[13px] text-ink/70">Não, deixa</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </Section>
+
+      <Section title="Suporte">
+        <div className="space-y-2">
+          <button onClick={()=>setCrisisOpen(true)} className="flex items-center gap-3 w-full text-left px-4 py-3 rounded-2xl hover:bg-cream border border-stone2/60 transition-colors">
+            <IcHeart size={16} className="text-terra-600"/>
+            <span className="text-[14.5px] text-ink/80">Em caso de crise</span>
+          </button>
+          <a href="mailto:oi@contigo.com.br" className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-cream border border-stone2/60 transition-colors">
+            <IcOut size={16} className="text-ink/55"/>
+            <span className="text-[14.5px] text-ink/80">Fale com a gente</span>
+          </a>
+        </div>
+      </Section>
+
+      {crisisOpen && <CrisisModal onClose={()=>setCrisisOpen(false)}/>}
+    </div>
+  );
+}
+
+function CrisisModal({ onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center" onClick={onClose}>
+      <div className="absolute inset-0 bg-ink/35 backdrop-blur-sm"/>
+      <div className="relative bg-cream rounded-t-3xl md:rounded-3xl border border-stone2 w-full max-w-lg p-6 md:p-8 step-in" onClick={e=>e.stopPropagation()}>
+        <div className="flex items-start justify-between mb-4">
+          <h3 className="font-display text-[26px] text-ink">Se você precisa de alguém <span className="italic text-sage-700">agora</span>.</h3>
+          <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-stone2/50 flex items-center justify-center text-ink/55"><IcX size={16}/></button>
+        </div>
+        <p className="text-[14.5px] text-ink/65 mb-5 text-pretty">Você não precisa atravessar isso sozinho. Aqui vão alguns caminhos no Brasil, todos gratuitos.</p>
+        <div className="space-y-3">
+          <a href="tel:188" className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-stone2 hover:border-terra-300 transition-colors">
+            <div className="w-10 h-10 rounded-full bg-terra-50 border border-terra-200 flex items-center justify-center"><IcPhone size={16} className="text-terra-600"/></div>
+            <div className="flex-1">
+              <div className="font-display text-[17px] text-ink">CVV · 188</div>
+              <div className="text-[13px] text-ink/55">Centro de Valorização da Vida · atende 24h, gratuito</div>
+            </div>
+          </a>
+          <a href="https://cvv.org.br" target="_blank" rel="noreferrer" className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-stone2 hover:border-sage-300 transition-colors">
+            <div className="w-10 h-10 rounded-full bg-sage-50 border border-sage-200 flex items-center justify-center"><IcHeart size={16} className="text-sage-700"/></div>
+            <div className="flex-1">
+              <div className="font-display text-[17px] text-ink">Chat do CVV</div>
+              <div className="text-[13px] text-ink/55">cvv.org.br · conversa por texto, 24h</div>
+            </div>
+          </a>
+          <div className="p-4 bg-white rounded-2xl border border-stone2">
+            <div className="font-display text-[17px] text-ink mb-1">CAPS · SUS</div>
+            <div className="text-[13px] text-ink/55">Centros de Atenção Psicossocial. Procure o mais próximo pelo site do Ministério da Saúde ou pelo telefone 136.</div>
+          </div>
+          <div className="p-4 bg-white rounded-2xl border border-stone2">
+            <div className="font-display text-[17px] text-ink mb-1">SAMU · 192</div>
+            <div className="text-[13px] text-ink/55">Em emergências médicas, incluindo crises psiquiátricas agudas.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ======================================================================
+   ONBOARDING (3 telas)
+   ====================================================================== */
+function Onboarding() {
+  const { state, setConfig } = useApp();
+  const [, navigate] = useHashRoute();
+  const [step, setStep] = React.useState(0);
+  const [times, setTimes] = React.useState(state.user.configuracoes.horariosCheckIn);
+  const [therapy, setTherapy] = React.useState(null);
+
+  const finish = () => {
+    setConfig({ horariosCheckIn: times, fazTerapia: therapy, onboarded: true });
+    navigate('/app');
+  };
+
+  return (
+    <div data-screen-label="00 Onboarding" className="min-h-screen flex items-center justify-center px-6 py-12 route-fade">
+      <div className="w-full max-w-xl">
+        <div className="flex items-center gap-1.5 mb-10">
+          {[0,1,2].map(i => (
+            <span key={i} className="h-[3px] flex-1 rounded-full overflow-hidden bg-stone2/70">
+              <span className="block h-full bg-sage-500 transition-all duration-500" style={{ width: i <= step ? '100%' : '0%' }}/>
+            </span>
+          ))}
+        </div>
+
+        <div className="step-in" key={step}>
+          {step === 0 && (
+            <>
+              <div className="mb-8">
+                <svg viewBox="0 0 200 80" className="w-[260px]">
+                  <path d="M10 50 C 40 10, 80 70, 120 40 S 190 30, 195 50" stroke="#7A9B8A" strokeWidth="1.6" fill="none" opacity="0.65"/>
+                </svg>
+              </div>
+              <h1 className="font-display text-[40px] md:text-[52px] leading-[1.05] tracking-[-0.02em] text-ink mb-5">
+                Três momentos do dia.<br/><span className="italic text-sage-700">É só isso.</span>
+              </h1>
+              <p className="text-[16px] text-ink/60 mb-10 max-w-md text-pretty">
+                De manhã, à tarde e à noite, um toque rápido.
+                Com o tempo, isso vira um retrato honesto da sua semana.
+              </p>
+              <BtnPrimary onClick={()=>setStep(1)}>Continuar <IcArr size={15}/></BtnPrimary>
+            </>
+          )}
+
+          {step === 1 && (
+            <>
+              <h1 className="font-display text-[32px] md:text-[40px] leading-[1.08] tracking-[-0.02em] text-ink mb-5">
+                A que horas você quer <span className="italic text-sage-700">ser lembrado?</span>
+              </h1>
+              <p className="text-[15px] text-ink/55 mb-8">Dá pra mudar depois.</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-10">
+                {[
+                  { k:'manha', label:'Manhã' },
+                  { k:'tarde', label:'Tarde' },
+                  { k:'noite', label:'Noite' },
+                ].map(({k, label}) => (
+                  <label key={k} className="block">
+                    <span className="block text-[12px] tracking-[0.14em] uppercase text-ink/45 mb-2">{label}</span>
+                    <input type="time" value={times[k]} onChange={e=>setTimes({...times, [k]: e.target.value})}
+                      className="w-full bg-white border border-stone2 rounded-2xl px-4 py-3 text-[15px] ring-focus"/>
+                  </label>
+                ))}
+              </div>
+              <div className="flex items-center gap-3">
+                <BtnPrimary onClick={()=>setStep(2)}>Continuar <IcArr size={15}/></BtnPrimary>
+                <button onClick={()=>setStep(0)} className="text-[13.5px] text-ink/55 hover:text-ink px-3">voltar</button>
+              </div>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <h1 className="font-display text-[32px] md:text-[40px] leading-[1.08] tracking-[-0.02em] text-ink mb-5">
+                Você faz terapia <span className="italic text-sage-700">atualmente?</span>
+              </h1>
+              <p className="text-[15px] text-ink/55 mb-8">Ajuda a gente a ajustar algumas coisas. Sem problema se preferir não responder.</p>
+              <div className="space-y-2 mb-10">
+                {['sim, faço', 'ainda não, mas quero começar', 'não faço', 'prefiro não dizer'].map(o => {
+                  const sel = therapy === o;
+                  return (
+                    <button key={o} onClick={()=>setTherapy(o)}
+                      className={"w-full px-4 py-3.5 rounded-2xl border text-left text-[14.5px] transition-all duration-300 " + (sel
+                        ? "bg-sage-50 border-sage-300 text-ink"
+                        : "bg-white border-stone2/60 text-ink/70 hover:border-ink/30")}>
+                      {o}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex items-center gap-3">
+                <BtnPrimary onClick={finish}>Tudo pronto <IcArr size={15}/></BtnPrimary>
+                <button onClick={()=>setStep(1)} className="text-[13.5px] text-ink/55 hover:text-ink px-3">voltar</button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ======================================================================
+   APP SHELL
+   ====================================================================== */
+function Shell({ children }) {
+  return (
+    <div className="min-h-screen flex bg-cream relative">
+      <Sidebar/>
+      <div className="flex-1 min-w-0 relative">
+        <DemoFlag/>
+        <MobileTop/>
+        <div className="pb-24 md:pb-8">{children}</div>
+      </div>
+      <BottomNav/>
+    </div>
+  );
+}
+
+function Router() {
+  const [route] = useHashRoute();
+  const { state } = useApp();
+  const path = route.split('?')[0];
+
+  // onboarding gate
+  const onboarded = state.user.configuracoes.onboarded;
+  // The demo seed sets onboarded implicitly-yes (we skip). But the user can reach /app/onboarding from cadastro.
+  if (path === '/app/onboarding') return <Onboarding/>;
+
+  if (path === '/app/check-in') return <Shell><CheckInFlow/></Shell>;
+  if (path === '/app/historico') return <Shell><Historico/></Shell>;
+  if (path === '/app/relatorio') return <Shell><Relatorio/></Shell>;
+  if (path === '/app/config')    return <Shell><Config/></Shell>;
+
+  return <Shell><Dashboard/></Shell>;
+}
+
+function App() {
+  return (
+    <StateProvider>
+      <Router/>
+    </StateProvider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+
+<style media="print">
+  .no-print { display: none !important; }
+  aside, nav { display: none !important; }
+  body { background: #FAF8F5 !important; }
+  #report-root { max-width: 100% !important; padding: 0 !important; }
+</style>
+
+</body>
+</html>
