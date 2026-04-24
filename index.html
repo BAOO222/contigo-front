@@ -282,6 +282,17 @@ const Navbar = () => {
           <Logo size={20} />
         </Link>
         <nav className="flex items-center gap-1 md:gap-2">
+          <a
+            href="#planos"
+            onClick={(e) => {
+              e.preventDefault();
+              const el = document.getElementById('planos');
+              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
+            className="hidden sm:inline-flex px-3 py-2 text-[14px] text-ink/65 hover:text-ink transition-colors duration-200 mr-1"
+          >
+            Planos
+          </a>
           <Link to="/login" className="hidden sm:inline-flex">
             <BtnGhost>Entrar</BtnGhost>
           </Link>
@@ -423,7 +434,7 @@ const Hero = () => (
         <div className="mt-8 flex flex-col items-start gap-3">
           <Link to="/cadastro">
             <BtnPrimary className="!px-7 !py-4 !text-[15.5px]">
-              Começar agora — é grátis por 14 dias
+              Começar agora — é grátis por 7 dias
               <IconArrowRight size={16}/>
             </BtnPrimary>
           </Link>
@@ -655,96 +666,142 @@ const ParaQuem = () => (
 );
 
 /* =================================================================
-   PREÇO
+   PREÇO — 3 planos: grátis / mensal / anual (destacado)
    ================================================================= */
+const PlanCard = ({
+  badge,
+  title,
+  price,
+  priceSuffix,
+  priceNote,
+  bullets,
+  cta,
+  ctaTo,
+  highlight = false,
+}) => (
+  <div
+    className={
+      "relative rounded-3xl p-8 md:p-9 transition-all duration-300 flex flex-col " +
+      (highlight
+        ? "bg-ink text-cream shadow-soft md:scale-[1.03] md:-translate-y-1"
+        : "bg-white border border-stone2 shadow-softer hover:shadow-soft")
+    }
+  >
+    {badge && (
+      <div
+        className={
+          "absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-3 py-1 rounded-full text-[11px] tracking-[0.14em] uppercase " +
+          (highlight ? "bg-terra-500 text-cream" : "bg-sage-50 border border-sage-100 text-sage-700")
+        }
+      >
+        {badge}
+      </div>
+    )}
+
+    <div className={"text-[13px] tracking-[0.14em] uppercase mb-3 " + (highlight ? "text-cream/55" : "text-ink/50")}>
+      {title}
+    </div>
+
+    <div className="flex items-end gap-2 mb-1">
+      <div className={"font-display leading-none tracking-[-0.03em] " + (highlight ? "text-cream" : "text-ink") + " text-[44px] md:text-[52px]"}>
+        {price}
+      </div>
+      {priceSuffix && (
+        <div className={"text-[14px] pb-2 " + (highlight ? "text-cream/55" : "text-ink/50")}>{priceSuffix}</div>
+      )}
+    </div>
+    {priceNote && (
+      <p className={"text-[13px] mb-7 " + (highlight ? "text-cream/55" : "text-ink/50")}>{priceNote}</p>
+    )}
+    {!priceNote && <div className="mb-7"/>}
+
+    <ul className="space-y-3 mb-8">
+      {bullets.map((b) => (
+        <li key={b} className={"flex items-start gap-3 text-[14.5px] " + (highlight ? "text-cream/90" : "text-ink/80")}>
+          <span
+            className={
+              "w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-[2px] " +
+              (highlight ? "bg-cream/10 border border-cream/20" : "bg-sage-50 border border-sage-200")
+            }
+          >
+            <IconCheck size={12} stroke={2.4} className={highlight ? "text-cream" : "text-sage-700"} />
+          </span>
+          <span>{b}</span>
+        </li>
+      ))}
+    </ul>
+
+    <div className="mt-auto">
+      <Link to={ctaTo}>
+        <button
+          className={
+            "w-full py-3.5 rounded-full text-[14.5px] font-medium transition-all duration-300 " +
+            (highlight
+              ? "bg-cream text-ink hover:bg-white"
+              : "bg-ink text-cream hover:bg-ink/90")
+          }
+        >
+          {cta}
+        </button>
+      </Link>
+    </div>
+  </div>
+);
+
 const Preco = () => {
-  const [yearly, setYearly] = React.useState(false);
   return (
-    <section className="py-20 md:py-28">
-      <div className="max-w-3xl mx-auto px-6 md:px-10">
-        <div className="text-center mb-12">
+    <section id="planos" className="py-20 md:py-28">
+      <div className="max-w-6xl mx-auto px-6 md:px-10">
+        <div className="text-center mb-14">
           <h2 className="font-display text-[32px] md:text-[44px] leading-[1.05] tracking-[-0.02em] mb-3">
-            Simples, <span className="italic">como deve ser.</span>
+            Comece gratis.<br className="md:hidden"/> <span className="italic">Continue quando fizer sentido.</span>
           </h2>
-          <p className="text-[15px] text-ink/55">Um plano. Sem pegadinhas.</p>
+          <p className="text-[15px] text-ink/55">Sem pegadinhas. Cancele quando quiser.</p>
         </div>
 
-        <div className="relative bg-white rounded-3xl border border-stone2 shadow-soft p-8 md:p-12">
-          {/* badge */}
-          <div className="absolute top-0 right-8 -translate-y-1/2 px-3 py-1 rounded-full bg-terra-500 text-cream text-[11px] tracking-[0.14em] uppercase">
-            14 dias grátis
-          </div>
-
-          <div className="flex items-baseline gap-3 mb-1">
-            <Logo size={22}/>
-          </div>
-          <p className="text-[14px] text-ink/55 mt-2 mb-8 max-w-md">
-            Tudo que você precisa pra chegar na terapia com mais clareza. Nada que você não precisa.
-          </p>
-
-          {/* Toggle */}
-          <div className="inline-flex items-center bg-sage-50 border border-sage-100 rounded-full p-1 mb-7">
-            <button
-              onClick={() => setYearly(false)}
-              className={
-                "px-4 py-1.5 rounded-full text-[13px] transition-all duration-300 " +
-                (!yearly ? "bg-white shadow-softer text-ink" : "text-ink/55 hover:text-ink")
-              }
-            >Mensal</button>
-            <button
-              onClick={() => setYearly(true)}
-              className={
-                "px-4 py-1.5 rounded-full text-[13px] transition-all duration-300 inline-flex items-center gap-2 " +
-                (yearly ? "bg-white shadow-softer text-ink" : "text-ink/55 hover:text-ink")
-              }
-            >
-              Anual
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-terra-50 text-terra-700 tracking-wide">−42%</span>
-            </button>
-          </div>
-
-          <div className="flex items-end gap-2 mb-8">
-            <div className="font-display text-[56px] md:text-[68px] leading-none tracking-[-0.03em] text-ink">
-              R$ {yearly ? '89' : '12,90'}
-            </div>
-            <div className="text-[14px] text-ink/50 pb-3">
-              {yearly ? '/ano' : '/mês'}
-            </div>
-          </div>
-          <p className="-mt-6 mb-8 text-[13px] text-ink/50">
-            {yearly ? 'R$ 7,42 por mês, cobrado anualmente.' : 'Ou R$ 89/ano (economize 42%).'}
-          </p>
-
-          <ul className="space-y-3 mb-10">
-            {[
+        <div className="grid md:grid-cols-2 gap-6 md:gap-6 max-w-4xl mx-auto pt-4">
+          <PlanCard
+            title="Mensal"
+            price="R$ 19"
+            priceSuffix="/mês"
+            priceNote="Cobrado mensalmente. Cancele quando quiser."
+            bullets={[
+              '7 dias grátis pra experimentar',
               'Check-ins ilimitados',
               'Relatórios semanais em PDF',
               'Exportação pro seu terapeuta',
-              'Seus dados criptografados, sempre',
-            ].map(b => (
-              <li key={b} className="flex items-center gap-3 text-[15px] text-ink/80">
-                <span className="w-5 h-5 rounded-full bg-sage-50 border border-sage-200 flex items-center justify-center shrink-0">
-                  <IconCheck size={12} stroke={2.4} className="text-sage-700"/>
-                </span>
-                {b}
-              </li>
-            ))}
-          </ul>
+              'Suporte por email',
+            ]}
+            cta="Começar com 7 dias grátis"
+            ctaTo="/cadastro?plano=mensal"
+          />
 
-          <Link to="/cadastro">
-            <BtnPrimary className="w-full !py-4 !text-[15.5px]">
-              Começar grátis por 14 dias
-              <IconArrowRight size={16}/>
-            </BtnPrimary>
-          </Link>
-          <p className="text-center text-[12.5px] text-ink/45 mt-4">
-            Sem cartão de crédito pra começar.
-          </p>
+          <PlanCard
+            badge="Mais popular"
+            title="Anual"
+            price="R$ 199"
+            priceSuffix="/ano"
+            priceNote="R$ 16,58 por mês. Economize 13%."
+            bullets={[
+              'Tudo do plano mensal',
+              '2 meses grátis no ano',
+              'Relatórios mensais em PDF',
+              'Prioridade no suporte',
+            ]}
+            cta="Começar com 7 dias grátis"
+            ctaTo="/cadastro?plano=anual"
+            highlight
+          />
         </div>
+
+        <p className="text-center text-[12.5px] text-ink/45 mt-10">
+          Todos os planos começam com 7 dias grátis. Sem cartão pra começar. Pagamento por cartão ou Pix.
+        </p>
       </div>
     </section>
   );
 };
+
 
 /* =================================================================
    FAQ
@@ -783,7 +840,7 @@ const Faq = () => {
       a: "Sim. Tudo é criptografado e nunca compartilhado. Nem nossa equipe acessa o conteúdo dos seus check-ins.",
     },
     {
-      q: "Como funcionam os 14 dias grátis?",
+      q: "Como funcionam os 7 dias grátis?",
       a: "Você usa tudo, sem cartão. Se quiser continuar depois, aí sim pedimos pagamento. Se não, suas informações são apagadas.",
     },
     {
@@ -1024,7 +1081,7 @@ const FormCadastro = ({ onSubmit, submitting }) => {
         Vamos <span className="italic text-sage-700">começar</span>.
       </h1>
       <p className="text-[15px] text-ink/60 mb-8">
-        Seus primeiros 14 dias são por nossa conta.
+        Seus primeiros 7 dias são por nossa conta.
       </p>
 
       <Field label="Como você quer ser chamado?" error={err('name')}>
