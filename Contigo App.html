@@ -150,7 +150,7 @@ function logoutAndGoToLogin() {
     localStorage.removeItem('contigo_user');
     localStorage.removeItem('contigo_state_v1');
   } catch {}
-  window.location.href = 'index.html#/login';
+  window.location.href = 'Contigo.html#/login';
 }
 
 
@@ -1728,7 +1728,13 @@ function Onboarding() {
   const [therapy, setTherapy] = React.useState(null);
 
   const finish = () => {
-    setConfig({ horariosCheckIn: times, fazTerapia: therapy, onboarded: true });
+    // therapy é uma das strings: 'sim, faço', 'ainda não, mas quero começar', 'não faço', 'prefiro não dizer', ou null.
+    // Converte pra boolean|null que o back-end aceita.
+    let fazTerapia = null;
+    if (therapy === 'sim, faço') fazTerapia = true;
+    else if (therapy === 'não faço' || therapy === 'ainda não, mas quero começar') fazTerapia = false;
+    // 'prefiro não dizer' e null viram null
+    setConfig({ horariosCheckIn: times, fazTerapia, onboarded: true });
     navigate('/app');
   };
 
